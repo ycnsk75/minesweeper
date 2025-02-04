@@ -1,5 +1,3 @@
-"""This module implements the Minesweeper game."""
-
 import random
 
 
@@ -43,3 +41,22 @@ class Minesweeper:
         self.revealed = set()
         self.game_state = {"won": False, "over": False}
         self.place_mines()
+
+    def reveal_cell(self, row: int, col: int):
+        """Reveal a cell and update the game state."""
+        if (row, col) in self.revealed:
+            return  # Cell already revealed
+
+        self.revealed.add((row, col))
+
+        # Check if the revealed cell is a mine
+        if (row, col) in self.mines:
+            self.game_state["over"] = True
+            self.game_state["won"] = False
+            return
+
+        # Check if all non-mine cells have been revealed
+        total_cells = self.rows * self.cols
+        if len(self.revealed) == total_cells - self.num_mines:
+            self.game_state["won"] = True
+            self.game_state["over"] = True

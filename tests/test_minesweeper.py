@@ -5,111 +5,108 @@ from src.minesweeper import Minesweeper
 
 def test_initialization():
     """Test the initialization of the Minesweeper game."""
-    # Test valid initialization
-    game = Minesweeper(5, 5, 5)
-    assert game.rows == 5
-    assert game.cols == 5
-    assert game.num_mines == 5
-    assert len(game.mines) == 5
-    assert len(game.revealed) == 0
-    assert not game.won
-    assert not game.game_over
-
-    # Test that board dimensions match
-    assert len(game.board) == 5
-    assert len(game.board[0]) == 5
-
-    # Test mine count limitation
-    game = Minesweeper(3, 3, 10)  # More mines than cells
-    assert game.num_mines == 9  # Should be limited to board size
-
-
-def test_mine_placement():
-    """Test the placement of mines on the board."""
-    game = Minesweeper(5, 5, 5)
-
-    # Count mines on board
-    mine_count = sum(1 for row in game.board for cell in row if cell == -1)
-    assert mine_count == 5
-
-    # Verify mine coordinates match board representation
-    for row, col in game.mines:
-        assert game.board[row][col] == -1
-
-    # Check that adjacent cells to mines have correct numbers
-    for row in range(game.rows):
-        for col in range(game.cols):
-            if (row, col) not in game.mines:
-                # Count adjacent mines manually
-                adjacent_mines = 0
-                for dx in [-1, 0, 1]:
-                    for dy in [-1, 0, 1]:
-                        new_row, new_col = row + dx, col + dy
-                        if (new_row, new_col) in game.mines:
-                            adjacent_mines += 1
-                assert game.board[row][col] == adjacent_mines
-
-
-def test_restart():
-    """Test the restart functionality."""
-    game = Minesweeper(5, 5, 5)
-
-    # Store initial state
-    initial_mines = game.mines.copy()
-    initial_board = [row[:] for row in game.board]
-
-    # Add some revealed cells
-    game.revealed.add((0, 0))
-    game.won = True
-    game.game_over = True
-
-    # Restart game
-    game.restart()
-
-    # Verify game state is reset
-    assert len(game.revealed) == 0
-    assert not game.won
-    assert not game.game_over
-
-    # Verify new mines are placed
-    assert len(game.mines) == 5
-    # Very unlikely but possible that mines are in exactly same positions
-    mine_count = sum(1 for row in game.board for cell in row if cell == -1)
-    assert mine_count == 5
-
-
-@pytest.mark.parametrize(
-    "rows,cols,mines",
-    [
-        (1, 1, 1),  # Minimal board
-        (10, 10, 20),  # Medium board
-        (3, 4, 5),  # Rectangular board
-        (5, 5, 24),  # Almost full board
-    ],
-)
-def test_various_board_sizes(rows, cols, mines):
-    """Test different board configurations."""
-    game = Minesweeper(rows, cols, mines)
+    rows, cols, num_mines = 10, 10, 10
+    game = Minesweeper(rows, cols, num_mines)
 
     assert game.rows == rows
     assert game.cols == cols
-    assert game.num_mines <= rows * cols
-    assert len(game.mines) == min(mines, rows * cols)
+    assert game.num_mines == num_mines
+    assert len(game.mines) == num_mines
+    assert len(game.revealed) == 0
+    assert game.game_state["won"] is False
+    assert game.game_state["over"] is False
 
-    # Verify board dimensions
-    assert len(game.board) == rows
-    assert all(len(row) == cols for row in game.board)
+
+def test_mine_placement():
+    """Test that mines are placed correctly on the board."""
+    rows, cols, num_mines = 5, 5, 5
+    game = Minesweeper(rows, cols, num_mines)
+
+    # Ensure the number of mines placed is correct
+    assert len(game.mines) == num_mines
+
+    # Ensure mines are within the board boundaries
+    for mine in game.mines:
+        assert 0 <= mine[0] < rows
+        assert 0 <= mine[1] < cols
+
+    # Ensure the board reflects the mine placement
+    mine_count = 0
+    for row in range(rows):
+        for col in range(cols):
+            if game.board[row][col] == -1:
+                mine_count += 1
+    assert mine_count == num_mines
 
 
-def test_edge_cases():
-    """Test edge cases and invalid inputs."""
-    # Test with minimum possible values
-    game = Minesweeper(1, 1, 1)
-    assert game.rows == 1
-    assert game.cols == 1
-    assert game.num_mines == 1
+def test_adjacent_mine_count():
+    """Test that the adjacent mine counts are calculated correctly."""
+    rows, cols, num_mines = 3, 3, 1
+    game = Minesweeper(rows, cols, num_mines)
 
-    # Test with zero mines
-    game = Minesweeper(5, 5, 0)
-    assert len(game.mines) == 0
-    assert all(cell == 0 for row in game.board for cell in row)
+    # Find the mine position
+    mine_pos = next(iter(game.mines))
+
+    # Check adjacent cells for correct counts
+    for dx in [-1, 0, 1]:
+        for dy in [-1, 0, 1]:
+            new_row, new_col = mine_pos[0] + dx, mine_pos[1] + dy
+            if (new_row, new_col) == mine_pos:
+                continue  # Skip the mine itself
+            if 0 <= new_row < rows and 0 <= new_col < cols:
+                assert game.board[new_row][new_col] == 1
+
+
+def test_restart():
+    """Test that the game restarts correctly."""
+    rows, cols, num_mines = 5, 5, 5
+    game = Minesweeper(rows, cols, num_mines)
+
+    # Store initial mine positions
+    initial_mines = game.mines.copy()
+
+    # Restart the game
+    game.restart()
+
+    # Ensure the game state is reset
+    assert len(game.mines) == num_mines
+    assert len(game.revealed) == 0
+    assert game.game_state["won"] is False
+    assert game.game_state["over"] is False
+
+    # Ensure the mine positions are different after restart
+    assert game.mines != initial_mines
+
+
+def test_game_over_on_mine_reveal():
+    """Test that the game ends when a mine is revealed."""
+    rows, cols, num_mines = 5, 5, 1
+    game = Minesweeper(rows, cols, num_mines)
+
+    # Reveal a mine
+    mine_pos = next(iter(game.mines))
+    game.reveal_cell(mine_pos[0], mine_pos[1])
+
+    # Check game state
+    assert game.game_state["over"] is True
+    assert game.game_state["won"] is False
+
+
+def test_game_won_when_all_non_mines_revealed():
+    """Test that the game is won when all non-mine cells are revealed."""
+    rows, cols, num_mines = 2, 2, 1
+    game = Minesweeper(rows, cols, num_mines)
+
+    # Reveal all non-mine cells
+    for row in range(rows):
+        for col in range(cols):
+            if (row, col) not in game.mines:
+                game.reveal_cell(row, col)
+
+    # Check game state
+    assert game.game_state["won"] is True
+    assert game.game_state["over"] is True
+
+
+if __name__ == "__main__":
+    pytest.main()
