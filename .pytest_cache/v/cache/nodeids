@@ -1,0 +1,22 @@
+[
+  "tests/test_minesweeper.py::test_board_creation",
+  "tests/test_minesweeper.py::test_edge_cases",
+  "tests/test_minesweeper.py::test_excessive_mines",
+  "tests/test_minesweeper.py::test_game_over_on_mine_reveal",
+  "tests/test_minesweeper.py::test_initialization",
+  "tests/test_minesweeper.py::test_mine_placement",
+  "tests/test_minesweeper.py::test_minesweeper_initialization",
+  "tests/test_minesweeper.py::test_module_exists",
+  "tests/test_minesweeper.py::test_negative_dimensions",
+  "tests/test_minesweeper.py::test_negative_mines",
+  "tests/test_minesweeper.py::test_neighbour_mine_count",
+  "tests/test_minesweeper.py::test_restart",
+  "tests/test_minesweeper.py::test_restart_game",
+  "tests/test_minesweeper.py::test_reveal_cell",
+  "tests/test_minesweeper.py::test_single_cell_board",
+  "tests/test_minesweeper.py::test_various_board_sizes[1-1-1]",
+  "tests/test_minesweeper.py::test_various_board_sizes[10-10-20]",
+  "tests/test_minesweeper.py::test_various_board_sizes[3-4-5]",
+  "tests/test_minesweeper.py::test_various_board_sizes[5-5-24]",
+  "tests/test_minesweeper.py::test_zero_mines"
+]
